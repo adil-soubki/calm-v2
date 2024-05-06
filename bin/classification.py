@@ -18,6 +18,7 @@ import transformers as tf
 from src.core.context import Context, get_context
 from src.core.app import harness
 from src.core.path import dirparent
+from src.core.evaluate import f1_per_class
 from src.data import wikiface
 
 
@@ -43,11 +44,13 @@ class DataArguments:
             )
         },
     )
+    history_length: int = dataclasses.field(default=None)
 
 
 def update_metrics(
     preds: list,
     refs: list,
+    label_list: list[int],
     metric: str,
     trainer: tf.Trainer,
     model_args: ModelArguments,
@@ -67,7 +70,7 @@ def update_metrics(
     os.makedirs(output_dir, exist_ok=True)
     # Compute the new results.
     results = evaluate.combine([metric]).compute(
-        predictions=preds, references=refs, average="micro"
+        predictions=preds, references=refs, label_list=label_list
     )  # XXX: handle f1 better. include pearsonr.
     df = pd.DataFrame([args | results])
     df["last_modified"] = pd.Timestamp.now()
@@ -100,17 +103,19 @@ def run(
         if data_args.do_regression
         else data_args.metric_for_classification
     )
+    metric_map = {"f1_per_class": f1_per_class}
+    metric = metric_map.get(metric, metric)
     # XXX: Currently not needed.
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
     data = wikiface.load_kfold(
+        hlen=data_args.history_length,
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
         seed=training_args.data_seed
     )
     if data_args.do_regression:
-        data = data.remove_columns("label").rename_column("label_float", "label")
-        model_args.num_labels = 1  # NOTE: Just used to stratify.
+        raise NotImplementedError
     # Preprocess training data.
     label_list = sorted(set(itertools.chain(*[data[split]["label"] for split in data])))
     tokenizer = tf.AutoTokenizer.from_pretrained(model_args.model_name_or_path)
@@ -162,14 +167,14 @@ def run(
         pdf.to_csv(os.path.join(training_args.output_dir, "preds.csv"))
         # Update aggregated evaluation results.
         update_metrics(
-            predictions, eval_pred.label_ids, metric, trainer,
+            predictions, eval_pred.label_ids, label_list, metric, trainer,
             model_args, data_args, training_args
         )
         # Return metrics.
         return evaluate.combine([metric]).compute(
             predictions=predictions,
             references=eval_pred.label_ids,
-            average="micro",
+            label_list=label_list,
         )  # XXX: handle f1 better. include pearsonr.
     trainer.compute_metrics = compute_metrics
     trainer.train()
