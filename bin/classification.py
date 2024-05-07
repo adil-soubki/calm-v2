@@ -119,6 +119,8 @@ def run(
     # Preprocess training data.
     label_list = sorted(set(itertools.chain(*[data[split]["label"] for split in data])))
     tokenizer = tf.AutoTokenizer.from_pretrained(model_args.model_name_or_path)
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({"pad_token": "<PAD>"})
     assert tokenizer.model_max_length >= data_args.text_max_length
     def preprocess_fn(examples):
         # Label processing.
@@ -144,6 +146,7 @@ def run(
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
     )
+    model.resize_token_embeddings(len(tokenizer))
     trainer = tf.Trainer(
         model=model,
         tokenizer=tokenizer,
