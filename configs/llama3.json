@@ -1,6 +1,6 @@
 {
-    "model_name_or_path": "mistralai/Mistral-7B-v0.1",
-    "output_dir": "outputs/wikiface/mistral",
+    "model_name_or_path": "meta-llama/Meta-Llama-3-8B",
+    "output_dir": "outputs/wikiface/llama3",
     "overwrite_output_dir": true,
     "use_int8": false,
     "use_lora": true,
