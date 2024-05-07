@@ -88,3 +88,10 @@ def load_kfold(
         "train": wf.select(train_idxs),
         "test": wf.select(test_idxs),
     })
+
+def load_unannotated(hlen: int) -> datasets.Dataset:
+    gstr = os.path.join(WF_DIR, "unannotated", "*")
+    df = pd.concat([pd.read_csv(p) for p in sorted(glob(gstr))]).reset_index(drop=True)
+    df = set_hlen(df, hlen)
+    # Create dataset.
+    return datasets.Dataset.from_pandas(df, preserve_index=False)

@@ -39,8 +39,8 @@ class DataArguments:
         metadata={
             "help": (
                 "The maximum total text input sequence length after tokenization. "
-		"Sequences longer than this will be truncated, sequences shorter "
-		"will be padded."
+                "Sequences longer than this will be truncated, sequences shorter "
+                "will be padded."
             )
         },
     )
@@ -134,7 +134,7 @@ def run(
     train_dataset, eval_dataset = data["train"], data["test"]
     # Model training.
     config = tf.AutoConfig.from_pretrained(
-       	model_args.model_name_or_path,
+        model_args.model_name_or_path,
         finetuning_task="text-classification",
         label2id={v: i for i, v in enumerate(label_list)},  # XXX: Is this needed?
         id2label={i: v for i, v in enumerate(label_list)},  # XXX: Is this needed?
@@ -146,6 +146,7 @@ def run(
     )
     trainer = tf.Trainer(
         model=model,
+        tokenizer=tokenizer,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
@@ -164,7 +165,7 @@ def run(
         # Save predictions to file.
         pdf = eval_dataset.to_pandas().assign(pred=predictions)
         assert np.allclose(pdf.label, eval_pred.label_ids)
-        pdf.to_csv(os.path.join(training_args.output_dir, "preds.csv"))
+        pdf.to_csv(os.path.join(training_args.output_dir, "eval_results.csv"))
         # Update aggregated evaluation results.
         update_metrics(
             predictions, eval_pred.label_ids, label_list, metric, trainer,
@@ -183,6 +184,21 @@ def run(
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
+    # Prediction
+    if training_args.do_predict:
+        pred_dataset = wikiface.load_unannotated(hlen=data_args.history_length).map(
+            preprocess_fn, batched=True, batch_size=16
+        )
+        if "label" in pred_dataset.features:
+            pred_dataset = pred_dataset.remove_columns("label")
+        logits = trainer.predict(pred_dataset, metric_key_prefix="pred").predictions
+        if data_args.do_regression:
+            preds = np.squeeze(logits)
+        else:
+            preds = np.argmax(logits, axis=1)
+        preds = list(map(lambda p: label_list[p], preds))
+        pdf = pred_dataset.to_pandas().assign(pred=preds)
+        pdf.to_csv(os.path.join(training_args.output_dir, "pred_results.csv"))
 
 
 def main(ctx: Context) -> None:
