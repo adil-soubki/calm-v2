@@ -81,8 +81,13 @@ def load_kfold(
     hlen: int, fold: int, k: int = 5, seed: int = 42
 ) -> datasets.DatasetDict:
     assert fold >= 0 and fold <= k - 1
-    kf = StratifiedKFold(n_splits=k, random_state=seed, shuffle=True)
     wf = load(hlen)
+    if k == 1:
+        return datasets.DatasetDict({
+            "train": wf,
+            "test": wf.select([]),
+        })
+    kf = StratifiedKFold(n_splits=k, random_state=seed, shuffle=True)
     train_idxs, test_idxs = list(kf.split(wf, wf["label"]))[fold]
     return datasets.DatasetDict({
         "train": wf.select(train_idxs),
@@ -92,6 +97,6 @@ def load_kfold(
 def load_unannotated(hlen: int) -> datasets.Dataset:
     gstr = os.path.join(WF_DIR, "unannotated", "*")
     df = pd.concat([pd.read_csv(p) for p in sorted(glob(gstr))]).reset_index(drop=True)
-    df = set_hlen(df, hlen)
+    df = set_hlen(df.assign(label="other"), hlen)
     # Create dataset.
     return datasets.Dataset.from_pandas(df, preserve_index=False)

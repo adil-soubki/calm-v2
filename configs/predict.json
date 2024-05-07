@@ -1,20 +1,20 @@
 {
     "model_name_or_path": "google/flan-t5-base",
-    "output_dir": "outputs/wikiface/default",
+    "output_dir": "outputs/wikiface/predict",
     "overwrite_output_dir": true,
 
     "save_total_limit": 1,
     "metric_for_classification": "f1_per_class",
     "metric_for_regression": "mae",
     "save_strategy": "epoch",
-    "evaluation_strategy": "epoch",
+    "evaluation_strategy": "no",
 
     "data_seed": 19,
-    "data_num_folds": 5,
+    "data_num_folds": 1,
     "history_length": 3,
     "do_regression": false,
     "do_train": true,
-    "do_eval": true,
+    "do_eval": false,
     "do_predict": true,
 
     "text_max_length": 275,

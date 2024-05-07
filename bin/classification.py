@@ -178,7 +178,9 @@ def run(
             label_list=label_list,
         )  # XXX: handle f1 better. include pearsonr.
     trainer.compute_metrics = compute_metrics
-    trainer.train()
+    # Training
+    if training_args.do_train:
+        trainer.train()
     # Evaluation
     if training_args.do_eval:
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
@@ -192,12 +194,14 @@ def run(
         if "label" in pred_dataset.features:
             pred_dataset = pred_dataset.remove_columns("label")
         logits = trainer.predict(pred_dataset, metric_key_prefix="pred").predictions
+        logits = logits[0] if isinstance(logits, tuple) else logits
         if data_args.do_regression:
             preds = np.squeeze(logits)
         else:
             preds = np.argmax(logits, axis=1)
         preds = list(map(lambda p: label_list[p], preds))
         pdf = pred_dataset.to_pandas().assign(pred=preds)
+        pdf = pdf.drop(columns=["input_ids", "attention_mask"])
         pdf.to_csv(os.path.join(training_args.output_dir, "pred_results.csv"))
 
 
