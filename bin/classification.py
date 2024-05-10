@@ -28,6 +28,7 @@ class ModelArguments:
     model_name_or_path: Optional[str] = dataclasses.field(default=None)
     use_int8: bool = dataclasses.field(default=False)
     use_lora: bool = dataclasses.field(default=False)
+    lora_r: int = dataclasses.field(default=64)
 
 
 @dataclasses.dataclass
@@ -148,16 +149,19 @@ def run(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
-        load_in_8bit=model_args.use_int8,
     )
     model.resize_token_embeddings(len(tokenizer))
+    model.config.pad_token_id = tokenizer.pad_token_id
     if model_args.use_int8:
+        model.quantization_config = tf.BitsAndBytesConfig(
+            load_in_8bit=model_args.use_int8
+        )
         model = peft.prepare_model_for_kbit_training(model)
     if model_args.use_lora:
         peft_config = peft.LoraConfig(
             lora_alpha=16,
             lora_dropout=0.1,
-            r=64,
+            r=model_args.lora_r,
             bias="none",
             task_type=peft.TaskType.SEQ_CLS,
             use_rslora=True,
