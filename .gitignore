@@ -161,3 +161,9 @@ cython_debug/
 
 # Ignore model output
 outputs/
+
+# Keys
+keys/
+
+# Do not commit WSJ text
+data/wsj

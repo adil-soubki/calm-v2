@@ -1,0 +1,60 @@
+# -*- coding: utf-8 -*-
+import dataclasses
+from typing import Optional
+
+import transformers as tf
+
+
+@dataclasses.dataclass
+class ModelArguments:
+    text_model_name_or_path: str
+    text_fusion_model_name_or_path: str
+    state_model_name_or_path: str
+    state_fusion_model_name_or_path: str
+
+
+class CALM(torch.nn.Module):
+    def __init__(self, config: ModelArguments):
+        super().__init__()
+        raise NotImplementedError
+        self.config = config
+        # Load the text models.
+        self.text_model = tf.AutoModel.from_pretrained(config.text_model_name_or_path)
+        self.text_fusion_model = tf.AutoModel.from_pretrained(
+            config.text_fusion_model_name_or_path
+        )
+        # Load the state model.
+        self.state_model = tf.AutoModel.from_pretrained(config.state_model_name_or_path)
+        self.state_fusion_model = tf.AutoModel.from_pretrained(
+            config.state_fusion_model_name_or_path
+        )
+
+
+    def forward(
+        self,
+        text_input_ids: Optional[torch.LongTensor] = None,
+        text_attention_mask: Optional[torch.FloatTensor] = None,
+        state_input_ids: Optional[torch.LongTensor] = None,
+        state_attention_mask: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        **kwargs
+    ) -> tf.modeling_outputs.CausalLMOutputWithCrossAttentions:
+        device = self.classification_head[0].weight.device
+        # Concatenate text and state inputs.
+        input_ids = torch.cat([text_input_ids, state_input_ids], dim=1)
+        attention_mask = torch.cat([text_attention_mask, state_attention_mask], dim=1)
+        # First pass on creating t+1 features.
+        text_features = self.text_model(
+            input_ids=input_ids,
+            attention_mask=attention_mask
+        ).last_hidden_state
+        state_features = self.state_model(
+            input_ids=input_ids,
+            attention_mask=attention_mask
+        ).last_hidden_state
+        fusion_features = torch.cat([text_features, state_features], dim=1)
+        # Second pass.
+        state_fusion_features = self.text_fusion_model(fusion_features)
+        text_fusion_features = self.text_fusion_model(fusion_features)
+        # Compute loss.
+        loss = None
