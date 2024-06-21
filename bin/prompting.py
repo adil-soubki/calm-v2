@@ -84,10 +84,10 @@ def get_completions(model_name: str) -> list[dict[str, Any]]:
         utts,
         batch_size=16,
         truncation=True,
-        max_length=model.config.max_position_embeddings,
+        max_length=512,  # XXX: model.config.max_position_embeddings,
         eos_token_id=terminators,
         pad_token_id=pipeline.tokenizer.eos_token_id,
-        do_sample=True,
+        do_sample=True,  # XXX: Should set false to make deterministic?
         temperature=1.0,
         top_p=1.0,
     )

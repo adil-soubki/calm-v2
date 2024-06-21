@@ -2,31 +2,29 @@
 import dataclasses
 from typing import Optional
 
+import torch
 import transformers as tf
 
 
 @dataclasses.dataclass
 class ModelArguments:
-    text_model_name_or_path: str
-    text_fusion_model_name_or_path: str
-    state_model_name_or_path: str
-    state_fusion_model_name_or_path: str
+    model_name_or_path: str
+    fusion_model_name_or_path: str
 
 
 class CALM(torch.nn.Module):
     def __init__(self, config: ModelArguments):
         super().__init__()
-        raise NotImplementedError
         self.config = config
         # Load the text models.
-        self.text_model = tf.AutoModel.from_pretrained(config.text_model_name_or_path)
+        self.text_model = tf.AutoModel.from_pretrained(config.model_name_or_path)
         self.text_fusion_model = tf.AutoModel.from_pretrained(
-            config.text_fusion_model_name_or_path
+            config.fusion_model_name_or_path
         )
         # Load the state model.
-        self.state_model = tf.AutoModel.from_pretrained(config.state_model_name_or_path)
+        self.state_model = tf.AutoModel.from_pretrained(config.model_name_or_path)
         self.state_fusion_model = tf.AutoModel.from_pretrained(
-            config.state_fusion_model_name_or_path
+            config.fusion_model_name_or_path
         )
 
 
@@ -39,6 +37,7 @@ class CALM(torch.nn.Module):
         labels: Optional[torch.LongTensor] = None,
         **kwargs
     ) -> tf.modeling_outputs.CausalLMOutputWithCrossAttentions:
+        raise NotImplementedError
         device = self.classification_head[0].weight.device
         # Concatenate text and state inputs.
         input_ids = torch.cat([text_input_ids, state_input_ids], dim=1)

@@ -6,6 +6,8 @@ from typing import Any
 import datasets
 import pandas as pd
 import transformers as tf
+from sklearn.model_selection import KFold
+
 from ..core.path import dirparent
 
 
@@ -21,6 +23,19 @@ def load() -> pd.DataFrame:
     df = pd.DataFrame(ret)
     assert len(df) == 2499
     return df
+
+
+def load_kfold(
+    fold: int, k: int = 5, seed: int = 42
+) -> datasets.DatasetDict:
+    assert fold >= 0 and fold <= k - 1
+    kf = KFold(n_splits=k, random_state=seed, shuffle=True)
+    wsj = datasets.Dataset.from_pandas(load(), preserve_index=False)
+    train_idxs, test_idxs = list(kf.split(wsj))[fold]
+    return datasets.DatasetDict({
+        "train": wsj.select(train_idxs),
+        "test": wsj.select(test_idxs),
+    })
 
 
 def tokenize_text(text: str, tokenizer: Any) -> list[str]:
