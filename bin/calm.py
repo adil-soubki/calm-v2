@@ -123,6 +123,9 @@ def run(
         result["state_ids"] = torch.randint(
             0, tokenizer.vocab_size, (len(result["input_ids"]), block_size, block_size)
         )
+        result["state_mask"] = torch.ones(
+            len(result["input_ids"]), block_size, block_size
+        )
         return result
     data = data.map(
         group_texts,

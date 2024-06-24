@@ -30,15 +30,15 @@ class CALM(torch.nn.Module):
 
     def forward(
         self,
-        text_input_ids: Optional[torch.LongTensor] = None,
-        text_attention_mask: Optional[torch.FloatTensor] = None,
-        state_input_ids: Optional[torch.LongTensor] = None,
-        state_attention_mask: Optional[torch.FloatTensor] = None,
+        input_ids: Optional[torch.LongTensor] = None,
+        attention_mask: Optional[torch.FloatTensor] = None,
+        state_ids: Optional[torch.LongTensor] = None,
+        state_mask: Optional[torch.FloatTensor] = None,
         labels: Optional[torch.LongTensor] = None,
         **kwargs
     ) -> tf.modeling_outputs.CausalLMOutputWithCrossAttentions:
         raise NotImplementedError
-        device = self.classification_head[0].weight.device
+        device = self.text_model.device
         # Concatenate text and state inputs.
         input_ids = torch.cat([text_input_ids, state_input_ids], dim=1)
         attention_mask = torch.cat([text_attention_mask, state_attention_mask], dim=1)
