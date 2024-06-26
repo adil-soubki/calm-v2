@@ -7,7 +7,7 @@ import itertools
 import os
 import sys
 from copy import copy
-from typing import Optional
+from typing import Any, Optional
 
 import datasets
 import evaluate
@@ -20,7 +20,7 @@ from src.core.context import Context, get_context
 from src.core.app import harness
 from src.core.path import dirparent
 from src.core.evaluate import f1_per_class
-from src.data import wikiface
+from src.data import commitment_bank, wikiface
 
 
 @dataclasses.dataclass
@@ -48,7 +48,16 @@ class DataArguments:
             )
         },
     )
-    history_length: int = dataclasses.field(default=None)
+    dataset: str = dataclasses.field(default=None)
+    dataset_kwargs: dict[Any, Any] = dataclasses.field(default_factory=dict)
+    text_column: str = dataclasses.field(default=None)
+    label_column: str = dataclasses.field(default=None)
+
+    def __post_init__(self):
+        assert self.dataset in ("commitment_bank", "wikiface")
+        assert all(k in ("hlen", "num_labels") for k in self.dataset_kwargs)
+        assert self.text_column is not None
+        assert self.label_column is not None
 
 
 def update_metrics(
@@ -112,12 +121,15 @@ def run(
     # XXX: Currently not needed.
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
-    data = wikiface.load_kfold(
-        hlen=data_args.history_length,
+    dmap = {"commitment_bank": commitment_bank, "wikiface": wikiface}
+    data = dmap[data_args.dataset].load_kfold(
+        **data_args.dataset_kwargs,
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
         seed=training_args.data_seed
-    )
+    ).rename_columns({
+        data_args.label_column: "label"
+    })
     if data_args.do_regression:
         raise NotImplementedError
     # Preprocess training data.
@@ -131,7 +143,7 @@ def run(
         examples["label"] = list(map(lambda l: label_list.index(l), examples["label"]))
         # Text processing.
         return tokenizer(
-            examples["sentence"],
+            examples[data_args.text_column],
             padding="max_length",
             max_length=data_args.text_max_length,
             truncation=True
