@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from glob import glob
-from typing import Any
+from typing import Any, Literal
 
 import datasets
 import pandas as pd
@@ -12,9 +12,15 @@ from ..core.path import dirparent
 
 
 WSJ_DIR = os.path.join(dirparent(os.path.realpath(__file__), 3), "data", "wsj")
+Version = Literal["raw", "llama3"]
 
 
-def load() -> pd.DataFrame:
+def load(version: Version) -> pd.DataFrame:
+    assert version in Version.__args__
+    if version == "llama3":
+        return pd.read_csv(os.path.join(WSJ_DIR, "llama3.csv.gz")).dropna(
+            subset=["text", "generation"]
+        )
     ret = []
     for path in glob(os.path.join(WSJ_DIR, "**", "*"), recursive=False):
         with open(path, "r", encoding="latin-1") as fd:
@@ -26,11 +32,11 @@ def load() -> pd.DataFrame:
 
 
 def load_kfold(
-    fold: int, k: int = 5, seed: int = 42
+    version: Version, fold: int, k: int = 5, seed: int = 42
 ) -> datasets.DatasetDict:
     assert fold >= 0 and fold <= k - 1
     kf = KFold(n_splits=k, random_state=seed, shuffle=True)
-    wsj = datasets.Dataset.from_pandas(load(), preserve_index=False)
+    wsj = datasets.Dataset.from_pandas(load(version), preserve_index=False)
     train_idxs, test_idxs = list(kf.split(wsj))[fold]
     return datasets.DatasetDict({
         "train": wsj.select(train_idxs),

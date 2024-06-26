@@ -83,6 +83,7 @@ def run(
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
     data = wsj.load_kfold(
+        version="raw",
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
         seed=training_args.data_seed
