@@ -1,9 +1,9 @@
 {
-    "model_name_or_path": "google/flan-t5-base",
-    "output_dir": "outputs/classification/cb",
+    "model_name_or_path": "outputs/seq2seq/default/fold_0/checkpoint-240581",
+    "output_dir": "outputs/classification/cb/seq2seq-pretrained-flan-t5-base",
     "overwrite_output_dir": true,
     "use_int8": false,
-    "use_lora": true,
+    "use_lora": false,
     "lora_r": 64,
 
     "save_total_limit": 1,
