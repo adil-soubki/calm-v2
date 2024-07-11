@@ -7,7 +7,7 @@ import itertools
 import os
 import sys
 from copy import copy
-from typing import Optional
+from typing import Any, Optional
 
 import datasets
 import evaluate
@@ -19,7 +19,7 @@ import transformers as tf
 from src.core.context import Context
 from src.core.app import harness
 from src.core.path import dirparent
-from src.data import wsj
+from src.data import fact_bank, wsj
 
 
 @dataclasses.dataclass
@@ -47,6 +47,14 @@ class DataArguments:
     )
     input_text_column: Optional[str] = dataclasses.field(default=None)
     target_text_column: Optional[str] = dataclasses.field(default=None)
+    dataset: str = dataclasses.field(default=None)
+    dataset_kwargs: dict[Any, Any] = dataclasses.field(default_factory=dict)
+
+    def __post_init__(self):
+        assert self.dataset in ("fact_bank", "wsj")
+        assert all(k in ("version",) for k in self.dataset_kwargs)
+        assert self.input_text_column is not None
+        assert self.target_text_column is not None
 
 
 def run(
@@ -69,8 +77,9 @@ def run(
     # XXX: Currently not needed.
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
-    data = wsj.load_kfold(
-        version="llama3",
+    dmap = {"fact_bank": fact_bank, "wsj": wsj}
+    data = dmap[data_args.dataset].load_kfold(
+        **data_args.dataset_kwargs,
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
         seed=training_args.data_seed
