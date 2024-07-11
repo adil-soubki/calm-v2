@@ -15,6 +15,7 @@ WSJ_DIR = os.path.join(dirparent(os.path.realpath(__file__), 3), "data", "wsj")
 Version = Literal["raw", "llama3"]
 
 
+# XXX: Make this return a Dataset.
 def load(version: Version) -> pd.DataFrame:
     assert version in Version.__args__
     if version == "llama3":

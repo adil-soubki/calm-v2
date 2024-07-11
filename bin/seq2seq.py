@@ -19,7 +19,7 @@ import transformers as tf
 from src.core.context import Context
 from src.core.app import harness
 from src.core.path import dirparent
-from src.data import fact_bank, wsj
+from src.data import tasks
 
 
 @dataclasses.dataclass
@@ -51,8 +51,6 @@ class DataArguments:
     dataset_kwargs: dict[Any, Any] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self):
-        assert self.dataset in ("fact_bank", "wsj")
-        assert all(k in ("version",) for k in self.dataset_kwargs)
         assert self.input_text_column is not None
         assert self.target_text_column is not None
 
@@ -77,8 +75,8 @@ def run(
     # XXX: Currently not needed.
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
-    dmap = {"fact_bank": fact_bank, "wsj": wsj}
-    data = dmap[data_args.dataset].load_kfold(
+    data = tasks.load_kfold(
+        data_args.dataset,
         **data_args.dataset_kwargs,
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
@@ -102,8 +100,9 @@ def run(
             truncation=True
         )
         # Label processing. Note use of text_target keyword argument.
+        # NOTE: We cast labels to str in case they happen to be numeric.
         labels = tokenizer(
-            text_target=examples[data_args.target_text_column],
+            text_target=list(map(str, examples[data_args.target_text_column])),  # XXX
             max_length=data_args.text_max_length,
             padding=padding,
             truncation=True
@@ -189,7 +188,8 @@ def run(
         result = evaluate.load(metric).compute(
             predictions=decoded_preds, references=decoded_labels
         )
-        del result["precisions"]
+        if "precisions" in result:
+            del result["precisions"]  # This clutters the results.
         result = {k: round(v * 100, 4) for k, v in result.items()}
         prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
         result["gen_len"] = np.mean(prediction_lens)

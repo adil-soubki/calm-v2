@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""An example script"""
+"""Finetuning Hugging Face models for text classification."""
 import dataclasses
 import hashlib
 import itertools
@@ -20,7 +20,7 @@ from src.core.context import Context, get_context
 from src.core.app import harness
 from src.core.path import dirparent
 from src.core.evaluate import f1_per_class
-from src.data import commitment_bank, wikiface
+from src.data import tasks
 
 
 @dataclasses.dataclass
@@ -54,8 +54,6 @@ class DataArguments:
     label_column: str = dataclasses.field(default=None)
 
     def __post_init__(self):
-        assert self.dataset in ("commitment_bank", "wikiface")
-        assert all(k in ("hlen", "num_labels") for k in self.dataset_kwargs)
         assert self.text_column is not None
         assert self.label_column is not None
 
@@ -121,8 +119,8 @@ def run(
     # XXX: Currently not needed.
     training_args.greater_is_better = metric not in ("loss", "eval_loss", "mse", "mae")
     # Load training data.
-    dmap = {"commitment_bank": commitment_bank, "wikiface": wikiface}
-    data = dmap[data_args.dataset].load_kfold(
+    data = tasks.load_kfold(
+        data_args.dataset,
         **data_args.dataset_kwargs,
         fold=data_args.data_fold,
         k=data_args.data_num_folds,
