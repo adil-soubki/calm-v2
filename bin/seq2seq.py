@@ -84,11 +84,14 @@ def run(
     )
     # XXX: For some reason Hugging Face errors when using "label" as a column name.
     #   We rename it to "target_text" in that case. If that column name is unavailable
-    #   this will throw an error.
+    #   this will throw an error. If "label" is not the target text we rename it to
+    #   "label_value" instead.
     column_names = set(itertools.chain(*data.column_names.values()))
     if data_args.target_text_column == "label":
         data = data.rename_column("label", "target_text")
         data_args.target_text_column = "target_text"
+    elif "label" in column_names:
+        data = data.rename_column("label", "label_value")
     #  for split in data:
     #      data[split] = data[split].select(range(1000))  # XXX
     # Preprocess training data.
