@@ -21,6 +21,10 @@ def load_kfold(name: str, fold: int, k: int = 5, seed: int = 42, **data_kwargs: 
     # If we are asking for the first fold just return the default splits.
     elif name in super_glue.TASKS and fold == 0:
         return load(name, seed, **data_kwargs)
+    elif name == "imdb" and fold == 0:
+        imdb = datasets.load_dataset("stanfordnlp/imdb")
+        del imdb["unsupervised"]  # Unused and unlabeled.
+        return imdb
     raise NotImplementedError
 
 

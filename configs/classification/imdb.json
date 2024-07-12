@@ -1,6 +1,6 @@
 {
     "model_name_or_path": "google/flan-t5-base",
-    "output_dir": "outputs/classification/boolq",
+    "output_dir": "outputs/classification/imdb",
     "overwrite_output_dir": true,
     "metric_for_classification": "f1_per_class",
     "metric_for_regression": "mae",
@@ -17,10 +17,10 @@
     "save_strategy": "epoch",
     "evaluation_strategy": "epoch",
 
-    "dataset": "boolq",
+    "dataset": "imdb",
     "dataset_kwargs": {"download_mode": "force_redownload"},
-    "text_column": "input_text",
-    "label_column": "target_val",
+    "text_column": "text",
+    "label_column": "label",
     "data_seed": 19,
     "data_num_folds": 5,
     "data_fold": 0,

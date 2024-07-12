@@ -17,9 +17,6 @@ def preprocess_boolq(example: dict[str, Any]) -> dict[str, Any]:
         f"passage: {example['passage']}",
         f"question: {example['question']}"
     ])
-    example["target_val"] = example["label"]
-    example["target_text"] = str(example["label"])
-    del example["label"]  # This was causing name collisions.
     return example
 
 
@@ -29,9 +26,6 @@ def preprocess_wic(example: dict[str, Any]) -> dict[str, Any]:
         f"sentence2: {example['sentence2']}",
         f"word: {example['word']}"
     ])
-    example["target_val"] = example["label"]
-    example["target_text"] = str(example["label"])
-    del example["label"]  # This was causing name collisions.
     return example
 
 
@@ -41,9 +35,6 @@ def preprocess_wsc(example: dict[str, Any]) -> dict[str, Any]:
         f"span1: {example['span1_text']}",
         f"span2: {example['span2_text']}"
     ])
-    example["target_val"] = example["label"]
-    example["target_text"] = str(example["label"])
-    del example["label"]  # This was causing name collisions.
     return example
 
 

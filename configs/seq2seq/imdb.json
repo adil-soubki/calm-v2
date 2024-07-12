@@ -1,6 +1,6 @@
 {
     "model_name_or_path": "google/flan-t5-base",
-    "output_dir": "outputs/seq2seq/boolq",
+    "output_dir": "outputs/seq2seq/imdb",
     "metric_for_evaluation": "accuracy",
     "do_train": true,
     "do_eval": true,
@@ -16,12 +16,12 @@
     "learning_rate": 2e-5,
     "num_train_epochs": 5,
 
-    "dataset": "boolq",
+    "dataset": "imdb",
     "dataset_kwargs": {"download_mode": "force_redownload"},
     "data_seed": 19,
     "data_num_folds": 5,
     "data_fold": 0,
-    "input_text_column": "input_text",
+    "input_text_column": "text",
     "target_text_column": "label",
 
     "save_total_limit": 1,
