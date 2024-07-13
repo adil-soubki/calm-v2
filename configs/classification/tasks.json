@@ -1,0 +1,30 @@
+{
+    "boolq": {
+        "metric_for_classification": "accuracy",
+        "dataset": "boolq",
+        "dataset_kwargs": {},
+        "text_column": "input_text",
+        "label_column": "label"
+    },
+    "commitment_bank": {
+        "metric_for_classification": "f1_per_class",
+        "dataset": "commitment_bank",
+        "dataset_kwargs": {"num_labels": 5},
+        "text_column": "cb_target",
+        "label_column": "cb_val"
+    },
+    "iemocap": {
+        "metric_for_classification": "f1_per_class",
+        "dataset": "iemocap",
+        "dataset_kwargs": {},
+        "text_column": "text",
+        "label_column": "label"
+    },
+    "imdb": {
+        "metric_for_classification": "accuracy",
+        "dataset": "imdb",
+        "dataset_kwargs": {},
+        "text_column": "text",
+        "label_column": "label"
+    }
+}

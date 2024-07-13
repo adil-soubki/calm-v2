@@ -22,7 +22,7 @@
     "data_num_folds": 5,
     "data_fold": 0,
     "input_text_column": "text",
-    "target_text_column": "label_name",
+    "target_text_column": "label",
 
     "save_total_limit": 1,
     "save_strategy": "epoch",

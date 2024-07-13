@@ -9,10 +9,11 @@ from ..data import commitment_bank, fact_bank, iemocap, super_glue, wikiface, ws
 
 DMAP = {
     "commitment_bank": commitment_bank,
-    "fact_bank": fact_bank,
+    "fact_bank": fact_bank,  # NOTE: Not done.
     "wikiface": wikiface,
     "wsj": wsj,
 }
+TASKS = list(DMAP) + list(super_glue.TASK_TO_FN) + ["imdb", "iemocap"]
 
 
 def load_kfold(name: str, fold: int, k: int = 5, seed: int = 42, **data_kwargs: Any):

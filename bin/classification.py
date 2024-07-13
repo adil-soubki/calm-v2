@@ -1,8 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Finetuning Hugging Face models for text classification."""
+"""
+Finetuning Hugging Face models for text classification.
+
+Note:
+    The configuration file accepts all arguments in the huggingface transformers
+    TrainingArguments class as well as those defined in this program's ModelArguments 
+    and DataArguments classes. The file is written in json.
+
+    The datasets (or tasks) the models are trained on are defined in a separate task
+    configuration json file. The parameters included here override options set in
+    the main configuration file. A single model will be trained for each task.
+
+Usage Examples: 
+    $ # Run on all tasks in default task config
+    $ classification.py configs/flan-t5-base.json
+    $ # Run on just one task.
+    $ classification.py configs/flan-t5-base.json -t iemocap
+    $ # Run on custom configs.
+    $ classification.py path/to/config.json -c path/to/tasks/json
+"""
+import argparse
 import dataclasses
 import hashlib
+import json
 import itertools
 import os
 import sys
@@ -52,6 +73,14 @@ class DataArguments:
     dataset_kwargs: dict[Any, Any] = dataclasses.field(default_factory=dict)
     text_column: str = dataclasses.field(default=None)
     label_column: str = dataclasses.field(default=None)
+    max_train_samples: int = dataclasses.field(
+        default=None,
+        metadata={"help": "for debugging, truncates the number of training examples"}
+    )
+    max_eval_samples: int = dataclasses.field(
+        default=None,
+        metadata={"help": "for debugging, truncates the number of evaluation examples"}
+    )
 
     def __post_init__(self):
         assert self.text_column is not None
@@ -76,13 +105,14 @@ def update_metrics(
     run_id = hashlib.md5(str(sorted(args.items())).encode("utf-8")).hexdigest()
     run_id += f"-{data_args.data_fold}"
     args["data_fold"] = data_args.data_fold
-    logger.info("\nRUN_ID: %s", run_id)
+    logger.info("\nRUN_ID: %s [%s]", run_id, data_args.dataset)
     output_dir = os.path.join(dirparent(training_args.output_dir, 2), "runs")
     os.makedirs(output_dir, exist_ok=True)
     # Compute the new results.
-    results = evaluate.combine([metric]).compute(
-        predictions=preds, references=refs, label_list=label_list
-    )  # XXX: handle f1 better. include pearsonr.
+    eval_kwargs = {"predictions": preds, "references": refs}
+    if metric == f1_per_class:
+        eval_kwargs["label_list"] = label_list
+    results = evaluate.combine([metric]).compute(**eval_kwargs)
     df = pd.DataFrame([args | results])
     df["last_modified"] = pd.Timestamp.now()
     df["current_epoch"] = trainer.state.epoch
@@ -148,6 +178,12 @@ def run(
         )
     data = data.map(preprocess_fn, batched=True, batch_size=16)
     train_dataset, eval_dataset = data["train"], data["test"]
+    if data_args.max_train_samples is not None:
+        max_train_samples = min(len(train_dataset), data_args.max_train_samples)
+        train_dataset = train_dataset.select(range(max_train_samples))
+    if data_args.max_eval_samples is not None:
+        max_eval_samples = min(len(eval_dataset), data_args.max_eval_samples)
+        eval_dataset = eval_dataset.select(range(max_eval_samples))
     # Model training.
     config = tf.AutoConfig.from_pretrained(
         model_args.model_name_or_path,
@@ -206,11 +242,10 @@ def run(
             model_args, data_args, training_args
         )
         # Return metrics.
-        return evaluate.combine([metric]).compute(
-            predictions=predictions,
-            references=eval_pred.label_ids,
-            label_list=label_list,
-        )  # XXX: handle f1 better. include pearsonr.
+        eval_kwargs = {"predictions": predictions, "references": eval_pred.label_ids}
+        if metric == f1_per_class:
+            eval_kwargs["label_list"] = label_list
+        return evaluate.combine([metric]).compute(**eval_kwargs)
     trainer.compute_metrics = compute_metrics
     # Training
     if training_args.do_train:
@@ -222,39 +257,45 @@ def run(
         trainer.save_metrics("eval", metrics)
     # Prediction
     if training_args.do_predict:
-        pred_dataset = wikiface.load_unannotated(hlen=data_args.history_length).map(
-            preprocess_fn, batched=True, batch_size=16
-        )
-        if "label" in pred_dataset.features:
-            pred_dataset = pred_dataset.remove_columns("label")
-        logits = trainer.predict(pred_dataset, metric_key_prefix="pred").predictions
-        logits = logits[0] if isinstance(logits, tuple) else logits
-        if data_args.do_regression:
-            preds = np.squeeze(logits)
-        else:
-            preds = np.argmax(logits, axis=1)
-        preds = list(map(lambda p: label_list[p], preds))
-        pdf = pred_dataset.to_pandas().assign(pred=preds)
-        pdf = pdf.drop(columns=["input_ids", "attention_mask"])
-        pdf.to_csv(os.path.join(training_args.output_dir, "pred_results.csv"))
+        raise NotImplementedError
 
 
 def main(ctx: Context) -> None:
-    # Parse arguments.
-    parser = tf.HfArgumentParser((ModelArguments, DataArguments, tf.TrainingArguments))
-    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        # If we pass only one argument to the script and it's the path to a json file.
-        model_args, data_args, training_args = parser.parse_json_file(
-            json_file=os.path.abspath(sys.argv[1])
-        )
-    else:
-        parser.error("No configuration passed")
-    # Run the training loop.
-    if data_args.data_fold is not None:
-        return run(ctx, model_args, data_args, training_args)
-    for fold in range(data_args.data_num_folds):
-        data_args.data_fold = fold
-        run(ctx, copy(model_args), copy(data_args), copy(training_args))
+    default_task_config = os.path.join(
+        dirparent(os.path.realpath(__file__), 2),
+        "configs", "classification", "tasks.json"
+    )
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("config")
+    parser.add_argument(
+        "-c", "--task-config", 
+        default=default_task_config,
+        help="path to json file containing task specific configuration options."
+    )
+    parser.add_argument("-t", "--tasks", nargs="*")
+    args = parser.parse_args()
+
+    with open(args.config, "r") as fd:
+        config = json.load(fd)
+    with open(args.task_config, "r") as fd:
+        task_config = json.load(fd)
+    for task in args.tasks or list(task_config):
+        if task not in task_config:
+            parser.error(f"unknown task: {task} {list(task_config)}")
+        cfg = copy(config) | task_config[task]
+        cfg["output_dir"] = os.path.join(cfg["output_dir"], task)
+        hf_parser = tf.HfArgumentParser((ModelArguments, DataArguments, tf.TrainingArguments))
+        model_args, data_args, training_args = hf_parser.parse_dict(cfg)
+        # Run the training loop.
+        if data_args.data_fold is not None:
+            run(ctx, model_args, data_args, training_args)
+            continue  # Skip the other folds since a fold was specified.
+        for fold in range(data_args.data_num_folds):
+            data_args.data_fold = fold
+            run(ctx, copy(model_args), copy(data_args), copy(training_args))
 
 
 if __name__ == "__main__":
