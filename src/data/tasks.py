@@ -4,7 +4,9 @@ from typing import Any
 
 import datasets
 
-from ..data import commitment_bank, fact_bank, iemocap, super_glue, wikiface, wsj
+from ..data import (
+    commitment_bank, fact_bank, goemotions, iemocap, super_glue, wikiface, wsj
+)
 
 
 DMAP = {
@@ -22,9 +24,7 @@ def load_kfold(name: str, fold: int, k: int = 5, seed: int = 42, **data_kwargs: 
     # If we are asking for the first fold just return the default splits.
     elif name in super_glue.TASKS and fold == 0:
         return load(name, seed, **data_kwargs)
-    elif name == "imdb" and fold == 0:
-        return load(name, seed, **data_kwargs)
-    elif name == "iemocap" and fold == 0:
+    elif name in ("imdb", "iemocap", "goemotions") and fold == 0:
         return load(name, seed, **data_kwargs)
     raise NotImplementedError
 
@@ -40,4 +40,6 @@ def load(name: str, seed: int = 42, **data_kwargs: Any):
         return imdb
     elif name == "iemocap":
         return iemocap.load()
+    elif name == "goemotions":
+        return goemotions.load(**data_kwargs)
     raise NotImplementedError
