@@ -10,6 +10,7 @@
         "metric_for_classification": "f1_per_class",
         "dataset": "commitment_bank",
         "dataset_kwargs": {"num_labels": 5},
+        "num_train_epochs": 10,
         "text_column": "cb_target",
         "label_column": "cb_val"
     },
@@ -32,6 +33,7 @@
             "question_type": "all",
             "answer_type": "multiple-choice"
         },
+        "num_train_epochs": 10,
         "text_column": "input_text",
         "label_column": "label_name"
     },
@@ -60,6 +62,7 @@
         "metric_for_classification": "accuracy",
         "dataset": "imdb",
         "dataset_kwargs": {},
+        "max_eval_samples": 500,
         "text_column": "text",
         "label_column": "label"
     },
@@ -67,6 +70,7 @@
         "metric_for_classification": "accuracy",
         "dataset": "wsc",
         "dataset_kwargs": {},
+        "num_train_epochs": 10,
         "text_column": "input_text",
         "label_column": "label"
     },
