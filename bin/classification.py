@@ -5,7 +5,7 @@ Finetuning Hugging Face models for text classification.
 
 Note:
     The configuration file accepts all arguments in the huggingface transformers
-    TrainingArguments class as well as those defined in this program's ModelArguments 
+    TrainingArguments class as well as those defined in this program's ModelArguments
     and DataArguments classes. The file is written in json.
 
     The datasets (or tasks) the models are trained on are defined in a separate task
@@ -271,7 +271,7 @@ def main(ctx: Context) -> None:
     )
     parser.add_argument("config")
     parser.add_argument(
-        "-c", "--task-config", 
+        "-c", "--task-config",
         default=default_task_config,
         help="path to json file containing task specific configuration options."
     )
