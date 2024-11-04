@@ -311,17 +311,16 @@ class FanToM:
         self.flattened_fantom = qas
 # == https://github.com/skywalker023/fantom == #
 
-['fact',
- 'tom:belief:inaccessible',
- 'tom:belief:inaccessible:multiple-choice',
- 'tom:belief:accessible',
- 'tom:belief:accessible:multiple-choice',
- 'tom:answerability:list',
- 'tom:answerability:binary',
- 'tom:info_accessibility:list',
- 'tom:info_accessibility:binary']
 
-
+#  ['fact',
+#   'tom:belief:inaccessible',
+#   'tom:belief:inaccessible:multiple-choice',
+#   'tom:belief:accessible',
+#   'tom:belief:accessible:multiple-choice',
+#   'tom:answerability:list',
+#   'tom:answerability:binary',
+#   'tom:info_accessibility:list',
+#   'tom:info_accessibility:binary']
 QuestionType = Literal["all", "belief", "answerability", "info_accessibility"]
 AnswerType = Literal["binary", "multiple-choice"]
 
