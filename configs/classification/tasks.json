@@ -4,15 +4,37 @@
         "dataset": "boolq",
         "dataset_kwargs": {},
         "text_column": "input_text",
-        "label_column": "label"
+        "label_column": "label",
+        "seed": [42, 0, 1, 2, 3]
     },
     "commitment_bank": {
         "metric_for_classification": "f1_per_class",
         "dataset": "commitment_bank",
         "dataset_kwargs": {"num_labels": 5},
+        "data_fold": null,
+        "do_regression": true,
         "num_train_epochs": 10,
         "text_column": "cb_target",
-        "label_column": "cb_val"
+        "label_column": "cb_val_float"
+    },
+    "commitment_bank_text_only": {
+        "metric_for_classification": "f1_per_class",
+        "dataset": "commitment_bank_text_only",
+        "dataset_kwargs": {},
+        "text_column": "text",
+        "label_column": "label",
+        "num_train_epochs": 10,
+        "do_regression": true,
+        "seed": [42, 0, 1, 2, 3]
+    },
+    "fact_bank": {
+        "metric_for_classification": "f1_per_class",
+        "dataset": "fact_bank",
+        "dataset_kwargs": {},
+        "text_column": "full_span",
+        "label_column": "label",
+        "num_train_epochs": 10,
+        "seed": [42, 0, 1, 2, 3]
     },
     "fantom_bin": {
         "metric_for_classification": "accuracy",
@@ -22,6 +44,7 @@
             "question_type": "all",
             "answer_type": "binary"
         },
+        "data_fold": null,
         "text_column": "input_text",
         "label_column": "label_name"
     },
@@ -33,6 +56,7 @@
             "question_type": "all",
             "answer_type": "multiple-choice"
         },
+        "data_fold": null,
         "num_train_epochs": 10,
         "text_column": "input_text",
         "label_column": "label_name"
@@ -42,21 +66,24 @@
         "dataset": "goemotions",
         "dataset_kwargs": {"label_type": "original", "multilabel": false},
         "text_column": "text",
-        "label_column": "label_name"
+        "label_column": "label_name",
+        "seed": [42, 0, 1, 2, 3]
     },
     "goemotions_ekman": {
         "metric_for_classification": "f1_per_class",
         "dataset": "goemotions",
         "dataset_kwargs": {"label_type": "ekman", "multilabel": false},
         "text_column": "text",
-        "label_column": "label_name"
+        "label_column": "label_name",
+        "seed": [42, 0, 1, 2, 3]
     },
     "iemocap": {
         "metric_for_classification": "f1_per_class",
         "dataset": "iemocap",
         "dataset_kwargs": {},
         "text_column": "text",
-        "label_column": "label"
+        "label_column": "label",
+        "seed": [42, 0, 1, 2, 3]
     },
     "imdb": {
         "metric_for_classification": "accuracy",
@@ -64,7 +91,8 @@
         "dataset_kwargs": {},
         "max_eval_samples": 500,
         "text_column": "text",
-        "label_column": "label"
+        "label_column": "label",
+        "seed": [42, 0, 1, 2, 3]
     },
     "wsc": {
         "metric_for_classification": "accuracy",
@@ -72,13 +100,15 @@
         "dataset_kwargs": {},
         "num_train_epochs": 10,
         "text_column": "input_text",
-        "label_column": "label"
+        "label_column": "label",
+        "seed": [42, 0, 1, 2, 3]
     },
     "wic": {
         "metric_for_classification": "accuracy",
         "dataset": "wic",
         "dataset_kwargs": {},
         "text_column": "input_text",
-        "label_column": "label"
+        "label_column": "label",
+        "seed": [42, 0, 1, 2, 3]
     }
 }

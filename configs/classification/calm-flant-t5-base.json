@@ -1,5 +1,5 @@
 {
-    "model_name_or_path": "outputs/seq2seq/default/fold_0/checkpoint-240581",
+    "model_name_or_path": "../calm/outputs/seq2seq/default/fold_0/checkpoint-240581",
     "output_dir": "outputs/classification/calm-flan-t5-base",
     "overwrite_output_dir": true,
     "do_regression": false,

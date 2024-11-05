@@ -5,13 +5,15 @@ from typing import Any
 import datasets
 
 from ..data import (
-    commitment_bank, fact_bank, fantom, goemotions, iemocap, super_glue, wikiface, wsj
+    commitment_bank, commitment_bank_text_only, fact_bank,
+    fantom, goemotions, iemocap, super_glue, wikiface, wsj
 )
 
 
 DMAP = {
     "commitment_bank": commitment_bank,
-    "fact_bank": fact_bank,  # NOTE: Not done.
+    "commitment_bank_text_only": commitment_bank_text_only,
+    "fact_bank": fact_bank,
     "fantom": fantom,
     "wikiface": wikiface,
     "wsj": wsj,

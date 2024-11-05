@@ -37,10 +37,11 @@ import numpy as np
 import pandas as pd
 import transformers as tf
 
-from src.core.context import Context, get_context
 from src.core.app import harness
-from src.core.path import dirparent
+from src.core.context import Context, get_context
 from src.core.evaluate import f1_per_class
+from src.core.functional import safe_iter
+from src.core.path import dirparent
 from src.data import tasks
 
 
@@ -129,13 +130,15 @@ def run(
     data_args: DataArguments,
     training_args: tf.TrainingArguments
 ) -> None:
-    # Make a directory per fold.
+    # Make a directory per fold and seed.
     training_args.output_dir = os.path.join(
-        training_args.output_dir, f"fold_{data_args.data_fold}"
+        training_args.output_dir,
+        f"fold_{data_args.data_fold}_seed_{training_args.seed}"
     )
     ctx.log.info(f"Training parameters {training_args}")
     ctx.log.info(f"Data parameters {data_args}")
     ctx.log.info(f"Model parameters {model_args}")
+    ctx.log.info(f"output_dir={training_args.output_dir}")
     # Set seed before initializing model.
     tf.set_seed(training_args.seed)
     # Configure for regression if needed.
@@ -158,8 +161,9 @@ def run(
     ).rename_columns({
         data_args.label_column: "label"
     })
-    if data_args.do_regression:
-        raise NotImplementedError
+    # XXX: delete
+    #  if data_args.do_regression:
+    #      raise NotImplementedError
     # Preprocess training data.
     label_list = sorted(set(itertools.chain(*[data[split]["label"] for split in data])))
     tokenizer = tf.AutoTokenizer.from_pretrained(model_args.model_name_or_path)
@@ -168,7 +172,11 @@ def run(
     assert tokenizer.model_max_length >= data_args.text_max_length
     def preprocess_fn(examples):
         # Label processing.
-        examples["label"] = list(map(lambda l: label_list.index(l), examples["label"]))
+        if not data_args.do_regression:
+            # Expects labels to be strings and uses the label_list to map them to ints.
+            examples["label"] = list(
+                map(lambda l: label_list.index(l), examples["label"])
+            )
         # Text processing.
         return tokenizer(
             examples[data_args.text_column],
@@ -185,12 +193,12 @@ def run(
         max_eval_samples = min(len(eval_dataset), data_args.max_eval_samples)
         eval_dataset = eval_dataset.select(range(max_eval_samples))
     # Model training.
-    config = tf.AutoConfig.from_pretrained(
-        model_args.model_name_or_path,
-        finetuning_task="text-classification",
-        label2id={v: i for i, v in enumerate(label_list)},  # XXX: Is this needed?
-        id2label={i: v for i, v in enumerate(label_list)},  # XXX: Is this needed?
-    )
+    config = tf.AutoConfig.from_pretrained(model_args.model_name_or_path)
+    if not data_args.do_regression:
+        config.label2id = {v: i for i, v in enumerate(label_list)}  # XXX: Is needed?
+        config.id2label = {i: v for i, v in enumerate(label_list)}  # XXX: Is needed?
+    else:
+        config.num_labels = 1
     model = tf.AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -235,11 +243,18 @@ def run(
         # Save predictions to file.
         pdf = eval_dataset.to_pandas().assign(pred=predictions)
         assert np.allclose(pdf.label, eval_pred.label_ids)
-        pdf.to_csv(os.path.join(training_args.output_dir, "eval_results.csv"))
+        pdf.to_csv(os.path.join(training_args.output_dir, "eval_preds.csv"))
         # Update aggregated evaluation results.
         update_metrics(
             predictions, eval_pred.label_ids, label_list, metric, trainer,
             model_args, data_args, training_args
+        )
+        # Write log data.
+        pd.DataFrame([h for h in trainer.state.log_history if "loss" in h]).to_csv(
+            os.path.join(training_args.output_dir, "train_loss.csv"), index=False
+        )
+        pd.DataFrame([h for h in trainer.state.log_history if "eval_loss" in h]).to_csv(
+            os.path.join(training_args.output_dir, "eval_loss.csv"), index=False
         )
         # Return metrics.
         eval_kwargs = {"predictions": predictions, "references": eval_pred.label_ids}
@@ -287,12 +302,21 @@ def main(ctx: Context) -> None:
             parser.error(f"unknown task: {task} {list(task_config)}")
         cfg = copy(config) | task_config[task]
         cfg["output_dir"] = os.path.join(cfg["output_dir"], task)
-        hf_parser = tf.HfArgumentParser((ModelArguments, DataArguments, tf.TrainingArguments))
+        hf_parser = tf.HfArgumentParser(
+            (ModelArguments, DataArguments, tf.TrainingArguments)
+        )
         model_args, data_args, training_args = hf_parser.parse_dict(cfg)
         # Run the training loop.
         if data_args.data_fold is not None:
-            run(ctx, model_args, data_args, training_args)
+            seeds = safe_iter(training_args.seed)
+            if len(seeds) != 5:
+                parser.error("expected 5 seeds when not using kfold")
+            for seed in seeds:
+                training_args.seed = seed
+                run(ctx, copy(model_args), copy(data_args), copy(training_args))
             continue  # Skip the other folds since a fold was specified.
+        if len(safe_iter(training_args.seed)) != 1:
+            parser.error("expected 1 seed when using kfold")
         for fold in range(data_args.data_num_folds):
             data_args.data_fold = fold
             run(ctx, copy(model_args), copy(data_args), copy(training_args))
