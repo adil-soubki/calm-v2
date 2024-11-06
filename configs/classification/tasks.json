@@ -89,7 +89,6 @@
         "metric_for_classification": "accuracy",
         "dataset": "imdb",
         "dataset_kwargs": {},
-        "max_eval_samples": 500,
         "text_column": "text",
         "label_column": "label",
         "seed": [42, 0, 1, 2, 3]
