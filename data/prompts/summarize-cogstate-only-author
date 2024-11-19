@@ -1,0 +1,7 @@
+Given the passage, answer a question.
+
+Passage:
+{passage}
+
+Question:
+Based on the passage, summarize the author's (1) emotions and (2) beliefs/opinions.
