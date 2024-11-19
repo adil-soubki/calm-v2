@@ -37,7 +37,10 @@ TEMPLATE = None
 
 
 def load_utterances(pipeline: tf.Pipeline) -> Dataset:
-    utts = wsj.load_tokenized()
+    #  utts = wsj.load_tokenized()
+    utts = pd.read_csv("/home/asoubki/dev/calm/data/wsj/llama3.csv.gz")[
+        ["fid", "stop_token_index", "tokenizer_name", "text"]
+    ]  # XXX
 
     def get_prompt(utterance: str) -> str:
         return pipeline.tokenizer.apply_chat_template(

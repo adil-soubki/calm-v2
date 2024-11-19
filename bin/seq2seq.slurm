@@ -7,6 +7,6 @@
 #SBATCH --nodelist=
 
 PYTHON=/home/asoubki/.miniconda3/envs/face/bin/python
-BIN=/home/asoubki/dev/calm/bin/seq2seq.py
-CONFIG=/home/asoubki/dev/calm/configs/seq2seq/default.json
+BIN=/home/asoubki/dev/calm-v2/bin/seq2seq.py
+CONFIG=/home/asoubki/dev/calm-v2/configs/seq2seq/default.json
 $PYTHON $BIN $CONFIG

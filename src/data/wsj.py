@@ -12,14 +12,16 @@ from ..core.path import dirparent
 
 
 WSJ_DIR = os.path.join(dirparent(os.path.realpath(__file__), 3), "data", "wsj")
-Version = Literal["raw", "llama3"]
+Version = Literal[
+    "raw", "llama3-calm-both", "llama3-calm-projected", "llama3-calm-author"
+]
 
 
 # XXX: Make this return a Dataset.
 def load(version: Version) -> pd.DataFrame:
     assert version in Version.__args__
-    if version == "llama3":
-        return pd.read_csv(os.path.join(WSJ_DIR, "llama3.csv.gz")).dropna(
+    if version.startswith("llama3"):
+        return pd.read_csv(os.path.join(WSJ_DIR, f"{version}.csv.gz")).dropna(
             subset=["text", "generation"]
         )
     ret = []

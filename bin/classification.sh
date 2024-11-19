@@ -35,7 +35,7 @@ for t in "${task[@]}"; do
 #!/bin/bash
 #SBATCH --job-name=classification
 #SBATCH --output=/home/asoubki/scratch/logs/%x.%j.out
-#SBATCH --time=2-00:00
+#SBATCH --time=7-00:00
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --nodelist=
