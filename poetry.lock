@@ -904,6 +904,21 @@ files = [
 ]
 
 [[package]]
+name = "loss-landscapes"
+version = "3.0.6"
+description = "A library for approximating loss landscapes in low-dimensional parameter subspaces"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "loss_landscapes-3.0.6-py3-none-any.whl", hash = "sha256:691952b8353dc3fc061de08ce759b66efbe8768fb5f9c4f8830f5a7131fc7552"},
+    {file = "loss_landscapes-3.0.6.tar.gz", hash = "sha256:880c17ae77dfa9497666033a86b072e0dc19c92c7dd2ff8258c679a3b870565f"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "markupsafe"
 version = "2.1.5"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -3031,4 +3046,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "94cfcd930d5d08a9a3a5859987bdf63a6294f618483c1c9ce4e504ea91f94e8b"
+content-hash = "521fcba5c3635e830b74e22bfd9b3ecfa5272cd5649f18d1f005898a77cc0e90"

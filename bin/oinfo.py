@@ -23,6 +23,8 @@ def print_summary(summary: pd.DataFrame) -> None:
         "task", "config",
         "fold", "seed", "epoch", "metric", "value"
     ]
+    if "p_value" in summary.columns:
+        col_order.append("p_value")
     prev_task = None
     lines = summary[col_order].to_string(index=False).split("\n")
     max_length = max(map(len, lines))
@@ -34,6 +36,31 @@ def print_summary(summary: pd.DataFrame) -> None:
         prev_task = curr_task
         print(line)
     print("=" * max_length)
+
+
+def significance_testing(df: pd.DataFrame) -> pd.DataFrame:
+    import scipy.stats
+
+    ret = []
+    tasks = df.task.unique()
+    baseline = df[df.config == "flan-t5-base"]
+    treatments = df[df.config != "flan-t5-base"]
+    for task in tasks:
+        configs = treatments[treatments.task == task].config.unique()
+        for config in configs:
+            treatment = treatments[treatments.config == config]
+            #  u_statistic, p_value = scipy.stats.ttest_ind(
+            u_statistic, p_value = scipy.stats.mannwhitneyu(
+                baseline[baseline.task == task].value.to_numpy(),
+                treatment[treatment.task == task].value.to_numpy()
+            )
+            ret.append({
+                "config": config,
+                "task": task,
+                "u_statistic": u_statistic,
+                "p_value": float(p_value)
+            })
+    return pd.DataFrame(ret)
 
 
 def main(ctx: Context) -> None:
@@ -81,6 +108,9 @@ def main(ctx: Context) -> None:
     df = pd.DataFrame(data).groupby(gcols).mean(
         numeric_only=True
     ).reset_index().apply(set_metric, axis=1)
+    df = df.merge(
+        significance_testing(pd.DataFrame(data)), on=["task", "config"], how="left"
+    ).fillna(1.0)  # Add in significant testing results.
     summary = []
     for task in sorted(df.task.unique()):
         ascending = False if task_to_metric[task] != "eval_mae" else True

@@ -13,14 +13,13 @@ shift $((OPTIND-1))
 
 # Check if options are set, otherwise use defaults.
 if [ -z "$config" ]; then
-    config=("flan-t5-base" "calm-flan-t5-base");
+    config=("flan-t5-base" "calm-flan-t5-base"
+            "calm-both-flan-t5-base" "calm-author-flan-t5-base");
 fi
 if [ -z $task ]; then
-    task=(
-        "boolq" "commitment_bank" "commitment_bank_text_only"
-        "fact_bank" "fantom_bin" "fantom_mc" "goemotions" "goemotions_ekman"
-        "iemocap" "imdb" "wsc" "wic"
-    );
+    task=("boolq" "commitment_bank" "commitment_bank_text_only"
+          "fact_bank" "fantom_bin" "fantom_mc" "goemotions" "goemotions_ekman"
+          "iemocap" "imdb" "wsc" "wic");
 fi
 
 # Iterate over arrays.
