@@ -93,6 +93,39 @@
         "label_column": "label",
         "seed": [42, 0, 1, 2, 3]
     },
+    "simple_tom_mental_state": {
+        "metric_for_classification": "accuracy",
+        "dataset": "simple_tom",
+        "dataset_kwargs": {
+            "question_type": "mental-state-qa"
+        },
+        "data_fold": null,
+        "num_train_epochs": 10,
+        "text_column": "input_text",
+        "label_column": "answerKey"
+    },
+    "simple_tom_behavior": {
+        "metric_for_classification": "accuracy",
+        "dataset": "simple_tom",
+        "dataset_kwargs": {
+            "question_type": "behavior-qa"
+        },
+        "data_fold": null,
+        "num_train_epochs": 10,
+        "text_column": "input_text",
+        "label_column": "answerKey"
+    },
+    "simple_tom_judgment": {
+        "metric_for_classification": "accuracy",
+        "dataset": "simple_tom",
+        "dataset_kwargs": {
+            "question_type": "judgment-qa"
+        },
+        "data_fold": null,
+        "num_train_epochs": 10,
+        "text_column": "input_text",
+        "label_column": "answerKey"
+    },
     "wsc": {
         "metric_for_classification": "accuracy",
         "dataset": "wsc",

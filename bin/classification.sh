@@ -19,7 +19,8 @@ fi
 if [ -z $task ]; then
     task=("boolq" "commitment_bank" "commitment_bank_text_only"
           "fact_bank" "fantom_bin" "fantom_mc" "goemotions" "goemotions_ekman"
-          "iemocap" "imdb" "wsc" "wic");
+          "iemocap" "imdb" "simple_tom_mental_state" "simple_tom_behavior"
+          "simple_tom_judgment" "wsc" "wic");
 fi
 
 # Iterate over arrays.

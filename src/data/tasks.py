@@ -6,7 +6,7 @@ import datasets
 
 from ..data import (
     commitment_bank, commitment_bank_text_only, fact_bank,
-    fantom, goemotions, iemocap, super_glue, wikiface, wsj
+    fantom, goemotions, iemocap, simple_tom, super_glue, wikiface, wsj
 )
 
 
@@ -15,6 +15,7 @@ DMAP = {
     "commitment_bank_text_only": commitment_bank_text_only,
     "fact_bank": fact_bank,
     "fantom": fantom,
+    "simple_tom": simple_tom,
     "wikiface": wikiface,
     "wsj": wsj,
 }
