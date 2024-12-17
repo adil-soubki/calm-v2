@@ -26,6 +26,7 @@ def load(question_type: QuestionType) -> ds.Dataset:
     return data.map(add_input_text)
 
 
+# XXX: Should split by scenario_name so scenarios don't appear in both train and test.
 def load_kfold(
     question_type: QuestionType,
     fold: int, k: int = 5, seed: int = 42
@@ -33,8 +34,11 @@ def load_kfold(
     assert fold >= 0 and fold <= k - 1
     kf = KFold(n_splits=k, random_state=seed, shuffle=True)
     data = load(question_type)
-    train_idxs, test_idxs = list(kf.split(data))[fold]
+    scenarios = sorted(set(data["scenario_name"]))
+    train_idxs, test_idxs = list(kf.split(scenarios))[fold]
+    train_scenarios = [scenarios[idx] for idx in train_idxs]
+    test_scenarios = [scenarios[idx] for idx in test_idxs]
     return ds.DatasetDict({
-        "train": data.select(train_idxs),
-        "test": data.select(test_idxs),
+        "train": data.filter(lambda r: r["scenario_name"] in train_scenarios),
+        "test": data.filter(lambda r: r["scenario_name"] in test_scenarios),
     })

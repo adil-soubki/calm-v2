@@ -27,6 +27,14 @@
         "do_regression": true,
         "seed": [42, 0, 1, 2, 3]
     },
+    "common_tom": {
+        "metric_for_classification": "accuracy",
+        "dataset": "common_tom",
+        "dataset_kwargs": {},
+        "text_column": "input_text",
+        "label_column": "answer",
+        "seed": [42, 0, 1, 2, 3]
+    },
     "fact_bank": {
         "metric_for_classification": "f1_per_class",
         "dataset": "fact_bank",
